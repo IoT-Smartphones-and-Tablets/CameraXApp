@@ -56,18 +56,31 @@ public class MainActivity extends AppCompatActivity {
         });
 
         binding.buttonCloseCamera.setOnClickListener(view -> {
+            cameraProvider.unbindAll();
+            binding.cameraPreview.setVisibility(View.INVISIBLE);
+        });
 
+        binding.imageButtonChangeCamera.setOnClickListener(view ->{
+            if(cameraPosition == CameraSelector.LENS_FACING_BACK){
+                cameraPosition = CameraSelector.LENS_FACING_FRONT;
+            }else{
+                cameraPosition = CameraSelector.LENS_FACING_BACK;
+            }
+            initCameraProvider();
         });
 
     }
 
-    public void initCameraProvider() {
+    int cameraPosition = CameraSelector.LENS_FACING_BACK;
+    ProcessCameraProvider cameraProvider;
 
+    public void initCameraProvider() {
+        binding.cameraPreview.setVisibility(View.VISIBLE);
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
                 ProcessCameraProvider.getInstance(binding.getRoot().getContext());
         cameraProviderFuture.addListener(()-> {
             try {
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                cameraProvider = cameraProviderFuture.get();
                 cameraProvider.unbindAll();
 
                 // Use case 1 -> to show the camera! at last
@@ -81,7 +94,9 @@ public class MainActivity extends AppCompatActivity {
                         .build();
 
                 // To select the front or back camera
-                CameraSelector cameraSelector = new CameraSelector.Builder().build();
+                CameraSelector cameraSelector = new CameraSelector.Builder()
+                        .requireLensFacing(cameraPosition)
+                        .build();
 
                 //set all together
                 cameraProvider.bindToLifecycle(MainActivity.this,cameraSelector,useCaseGroup);
